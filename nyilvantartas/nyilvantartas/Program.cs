@@ -1,85 +1,196 @@
-﻿namespace nyilvantartas
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+namespace IngatlanNyilvantarto
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
+    //Ingatlan adatai: Cím, helyrajzi szám, méret ($m ^ 2$).
+    //Bérlő adatai: Név, szerződés kezdete/ vége, kaució összege.
+    //Mérőóra állások: Víz, gáz, villany(havi bontásban).
+    //Költségek: Közös költség, javítási alap, biztosítás.
+    //Emlékeztető: Mikor esedékes a következő gázkészülék - felülvizsgálat.
+    
 
-    namespace IngatlanNyilvantarto
+    class Program
     {
-        // 1. Az Ingatlan osztály definiálása
-       
+        static List<Ingatlan> ingatlanok = new List<Ingatlan>();
+        const string FajlNev = "ingatlanok.txt"; // A fájl a .exe mellett lesz
 
-        class Program
+        static void Main(string[] args)
         {
-            static List<Ingatlan> ingatlanok = new List<Ingatlan>();
+            // Induláskor betöltjük az adatokat a fájlból
+            AdatokBetoltese();
 
-            static void Main(string[] args)
+            while (true)
             {
-                // Teszt adatok hozzáadása
-                MintaAdatok();
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("================================================");
+                Console.WriteLine("   PROFI INGATLAN-NYILVÁNTARTÓ RENDSZER v2.0    ");
+                Console.WriteLine("================================================");
+                Console.ResetColor();
+                Console.WriteLine("1. Ingatlanok listázása");
+                Console.WriteLine("2. Új ingatlan felvétele");
+                Console.WriteLine("3. Pénzügyi statisztika");
+                Console.WriteLine("4. Kilépés");
+                Console.Write("\nVálassz opciót: ");
 
-                while (true)
+                string opcio = Console.ReadLine();
+
+                switch (opcio)
                 {
-                    Console.Clear();
-                    Console.WriteLine("=== INGATLAN-NYILVÁNTARTÓ RENDSZER ===");
-                    Console.WriteLine("1. Ingatlanok listázása");
-                    Console.WriteLine("2. Új ingatlan felvétele");
-                    Console.WriteLine("3. Kilépés");
-                    Console.Write("\nVálassz opciót: ");
-
-                    string opcio = Console.ReadLine();
-
-                    switch (opcio)
-                    {
-                        case "1":
-                            Listazas();
-                            break;
-                        case "2":
-                            Hozzaadas();
-                            break;
-                        case "3":
-                            return;
-                        default:
-                            Console.WriteLine("Érvénytelen opció!");
-                            break;
-                    }
-                    Console.WriteLine("\nNyomj egy gombot a folytatáshoz...");
-                    Console.ReadKey();
+                    case "1":
+                        Listazas();
+                        break;
+                    case "2":
+                        Hozzaadas();
+                        break;
+                    case "3":
+                        MegjelenitStatisztika();
+                        break;
+                    case "4":
+                        Console.WriteLine("Viszlát!");
+                        return;
+                    default:
+                        Console.WriteLine("Nincs ilyen opció!");
+                        break;
                 }
+                Console.WriteLine("\nNyomj meg egy gombot a menübe való visszatéréshez...");
+                Console.ReadKey();
+            }
+        }
+
+        static void Listazas()
+        {
+            Console.Clear();
+            Console.WriteLine("AKTUÁLIS INGATLANLISTA\n");
+
+            if (ingatlanok.Count == 0)
+            {
+                Console.WriteLine("A lista jelenleg üres.");
+                return;
             }
 
-            static void Listazas()
-            {
-                Console.WriteLine("\nCím                  | Méret  | Állapot / Bérlő                      | Határidő");
-                Console.WriteLine("--------------------------------------------------------------------------------");
-                foreach (var i in ingatlanok)
-                {
-                    Console.WriteLine(i.ToString());
-                }
-            }
+            Console.WriteLine("Cím                  | Méret    | Állapot / Bérlő                      | Határidő");
+            Console.WriteLine(new string('-', 90));
 
-            static void Hozzaadas()
+            foreach (var i in ingatlanok)
+            {
+                if (!i.IsKiadva) Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(i.ToString());
+                Console.ResetColor();
+            }
+        }
+
+        static void Hozzaadas()
+        {
+            Console.Clear();
+            Console.WriteLine("ÚJ INGATLAN FELVÉTELE\n");
+            try
             {
                 Ingatlan uj = new Ingatlan();
-                Console.Write("Cím: "); uj.Cim = Console.ReadLine();
-                Console.Write("Méret (m2): "); uj.Meret = double.Parse(Console.ReadLine());
-                Console.Write("Kiadva? (i/n): "); uj.IsKiadva = Console.ReadLine().ToLower() == "i";
+                Console.Write("Cím: ");
+                uj.Cim = Console.ReadLine();
+
+                Console.Write("Méret (m2): ");
+                uj.Meret = double.Parse(Console.ReadLine());
+
+                Console.Write("Kiadva van már? (i/n): ");
+                uj.IsKiadva = Console.ReadLine().ToLower() == "i";
 
                 if (uj.IsKiadva)
                 {
-                    Console.Write("Bérlő neve: "); uj.BerloNeve = Console.ReadLine();
-                    Console.Write("Havi díj: "); uj.BerletiDij = int.Parse(Console.ReadLine());
+                    Console.Write("Bérlő neve: ");
+                    uj.BerloNeve = Console.ReadLine();
+                    Console.Write("Havi bérleti díj (Ft): ");
+                    uj.BerletiDij = int.Parse(Console.ReadLine());
+                    Console.Write("Szerződés lejárata (éééé-hh-nn): ");
+                    uj.SzerzodesVege = DateTime.Parse(Console.ReadLine());
                 }
-                uj.SzerzodesVege = DateTime.Now.AddYears(1); // Alapértelmezett 1 év
+                else
+                {
+                    uj.BerloNeve = "N/A";
+                    uj.BerletiDij = 0;
+                    uj.SzerzodesVege = DateTime.Now;
+                }
 
                 ingatlanok.Add(uj);
-                Console.WriteLine("Sikeresen hozzáadva!");
+                AdatokMentese(); // Mentés a fájlba minden hozzáadás után
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("\nIngatlan sikeresen rögzítve és elmentve a fájlba!");
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"\nHiba történt: {ex.Message} Kérlek, figyelj a formátumokra!");
+                Console.ResetColor();
+            }
+        }
+
+        static void MegjelenitStatisztika()
+        {
+            Console.Clear();
+            Console.WriteLine("PÉNZÜGYI ÉS INGATLAN STATISZTIKA\n");
+
+            if (ingatlanok.Count == 0)
+            {
+                Console.WriteLine("Nincs adat a statisztikához.");
+                return;
             }
 
-            static void MintaAdatok()
+            int osszes = ingatlanok.Count;
+            int kiadott = ingatlanok.Count(i => i.IsKiadva);
+            int haviBevetel = ingatlanok.Where(i => i.IsKiadva).Sum(i => i.BerletiDij);
+            double atlagMeret = ingatlanok.Average(i => i.Meret);
+
+            Console.WriteLine($"Ingatlanok száma összesen: {osszes} db");
+            Console.WriteLine($"Ebből kiadva:             {kiadott} db");
+            Console.WriteLine($"Kihasználtság:            {(double)kiadott / osszes:P1}"); // P1: Százalékos formátum
+            Console.WriteLine($"Összes havi bevétel:      {haviBevetel:N0} Ft");
+            Console.WriteLine($"Átlagos ingatlan méret:   {atlagMeret:F1} m2");
+        }
+
+        static void AdatokMentese()
+        {
+            try
             {
-                ingatlanok.Add(new Ingatlan { Cim = "Fő utca 1.", Meret = 50, IsKiadva = true, BerloNeve = "Kovács János", BerletiDij = 150000, SzerzodesVege = new DateTime(2026, 05, 10) });
-                ingatlanok.Add(new Ingatlan { Cim = "Tölgyfa u. 12.", Meret = 35, IsKiadva = false, SzerzodesVege = DateTime.Now });
+                var sorok = ingatlanok.Select(i => i.ToFileFormat());
+                File.WriteAllLines(FajlNev, sorok);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Hiba a mentés során: " + ex.Message);
+            }
+        }
+
+        static void AdatokBetoltese()
+        {
+            if (File.Exists(FajlNev))
+            {
+                try
+                {
+                    string[] sorok = File.ReadAllLines(FajlNev);
+                    foreach (string sor in sorok)
+                    {
+                        if (string.IsNullOrWhiteSpace(sor)) continue;
+                        string[] adatok = sor.Split(';');
+                        ingatlanok.Add(new Ingatlan
+                        {
+                            Cim = adatok[0],
+                            Meret = double.Parse(adatok[1]),
+                            IsKiadva = bool.Parse(adatok[2]),
+                            BerloNeve = adatok[3],
+                            BerletiDij = int.Parse(adatok[4]),
+                            SzerzodesVege = DateTime.Parse(adatok[5])
+                        });
+                    }
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine("A korábbi adatfájl sérült, új listát kezdünk.");
+                }
             }
         }
     }
