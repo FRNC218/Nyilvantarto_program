@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace IngatlanNyilvantarto
 {
@@ -33,7 +34,8 @@ namespace IngatlanNyilvantarto
                 Console.WriteLine("1. Ingatlanok listázása");
                 Console.WriteLine("2. Új ingatlan felvétele");
                 Console.WriteLine("3. Pénzügyi statisztika");
-                Console.WriteLine("4. Kilépés");
+                Console.WriteLine("4. Exportalas CSV fájlba");
+                Console.WriteLine("5. Kilépés");
                 Console.Write("\nVálassz opciót: ");
 
                 string opcio = Console.ReadLine();
@@ -50,6 +52,9 @@ namespace IngatlanNyilvantarto
                         MegjelenitStatisztika();
                         break;
                     case "4":
+                        ExportalasCSV();
+                        break;
+                    case "5":
                         Console.WriteLine("Viszlát!");
                         return;
                     default:
@@ -215,6 +220,34 @@ namespace IngatlanNyilvantarto
                 {
                     Console.WriteLine("A korábbi adatfájl sérült, új listát kezdünk.");
                 }
+            }
+        }
+        static void ExportalasCSV()
+        {
+            string csvFajlNev = $"ingatlan_riport_{DateTime.Now:yyyyMMdd}.csv";
+
+            try
+            {
+                using (StreamWriter sw = new StreamWriter(csvFajlNev, false, Encoding.UTF8))
+                {
+                    // Fejléc írása (Excel számára fontos oszlopnevek)
+                    sw.WriteLine("Cím;Méret (m2);Állapot;Bérlő;Havi Díj;Szerződés Vége;Gázvizsga Dátuma");
+
+                    foreach (var i in ingatlanok)
+                    {
+                        string statusz = i.IsKiadva ? "Kiadva" : "Szabad";
+                        // Egy sor összeállítása pontosvesszővel elválasztva
+                        sw.WriteLine($"{i.Cim};{i.Meret};{statusz};{i.BerloNeve};{i.BerletiDij};{i.SzerzodesVege:yyyy-MM-dd};{i.GazVizsgaDatum:yyyy-MM-dd}");
+                    }
+                }
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\nSikeres exportálás! A fájl neve: {csvFajlNev}");
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Hiba az exportálás során: " + ex.Message);
             }
         }
     }
