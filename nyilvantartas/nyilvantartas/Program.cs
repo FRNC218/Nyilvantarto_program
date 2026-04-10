@@ -64,24 +64,48 @@ namespace IngatlanNyilvantarto
         static void Listazas()
         {
             Console.Clear();
-            Console.WriteLine("AKTUÁLIS INGATLANLISTA\n");
+            Console.WriteLine("AKTUÁLIS INGATLANLISTA (Színkódolt figyelmeztetésekkel)\n");
 
             if (ingatlanok.Count == 0)
             {
-                Console.WriteLine("A lista jelenleg üres.");
+                Console.WriteLine("A lista üres.");
                 return;
             }
 
-            Console.WriteLine("Cím                  | Méret    | Állapot / Bérlő                      | Határidő");
-            Console.WriteLine(new string('-', 90));
+            Console.WriteLine("Cím                  | Méret    | Állapot / Bérlő           | Határidő / Megjegyzés");
+            Console.WriteLine(new string('-', 95));
 
             foreach (var i in ingatlanok)
             {
-                if (!i.IsKiadva) Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine(i.ToString());
+                // ALAPÉRTELMEZETT SZÍN: Fehér
                 Console.ResetColor();
+
+                // 1. KRITIKUS: Lejárt gázvizsga vagy 30 napon belül lejáró szerződés -> PIROS
+                if (i.GazVizsgaDatum < DateTime.Now || (i.IsKiadva && i.SzerzodesVege < DateTime.Now.AddDays(30)))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                }
+                // 2. FIGYELMEZTETÉS: Gázvizsga 60 napon belül esedékes -> SÁRGA
+                else if (i.GazVizsgaDatum < DateTime.Now.AddDays(60))
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                }
+                // 3. RENDBEN: Szabad ingatlan -> ZÖLD
+                else if (!i.IsKiadva)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                }
+
+                Console.WriteLine(i.ToString());
             }
+            Console.ResetColor();
+
+            Console.WriteLine("\nJelmagyarázat:");
+            Console.ForegroundColor = ConsoleColor.Red; Console.Write("■ Piros: "); Console.ResetColor(); Console.WriteLine("Lejárt");
+            Console.ForegroundColor = ConsoleColor.Yellow; Console.Write("■ Sárga: "); Console.ResetColor(); Console.WriteLine("hamarosan lejár");
+            Console.ForegroundColor = ConsoleColor.Green; Console.Write("■ Zöld:  "); Console.ResetColor(); Console.WriteLine("Szabadon kiadható ingatlan");
         }
+
 
         static void Hozzaadas()
         {

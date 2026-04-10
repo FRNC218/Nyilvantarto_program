@@ -14,6 +14,7 @@ namespace IngatlanNyilvantarto
         public string BerloNeve { get; set; }
         public int BerletiDij { get; set; }
         public DateTime SzerzodesVege { get; set; }
+        public DateTime GazVizsgaDatum { get; set; }
 
         public string ToFileFormat()
         {
