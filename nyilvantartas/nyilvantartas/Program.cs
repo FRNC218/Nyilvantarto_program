@@ -20,7 +20,6 @@ namespace IngatlanNyilvantarto
 
         static void Main(string[] args)
         {
-            // Induláskor betöltjük az adatokat a fájlból
             AdatokBetoltese();
 
             while (true)
@@ -37,6 +36,7 @@ namespace IngatlanNyilvantarto
                 Console.WriteLine("4. Exportalas CSV fájlba");
                 Console.WriteLine("5. Ingatlan kiadása");
                 Console.WriteLine("6. Betöltés");
+                Console.WriteLine("7. dsadasd");
                 Console.WriteLine("0. Kilépés");
                 Console.Write("\nVálassz opciót: ");
 
@@ -61,6 +61,9 @@ namespace IngatlanNyilvantarto
                         break;
                     case "6":
                         AdatokBetoltese();
+                        break;
+                    case "7":
+                        UjFajlLetrehozasa();
                         break;
                     case "0":
                         Console.WriteLine("Viszlát!");
@@ -194,7 +197,6 @@ namespace IngatlanNyilvantarto
             try
             {
                 var sorok = ingatlanok.Select(i => i.ToFileFormat());
-                // Most már a kiválasztott fájlba mentünk
                 File.WriteAllLines(AktualitasFajlUtvonal, sorok);
             }
             catch (Exception ex)
@@ -311,7 +313,6 @@ namespace IngatlanNyilvantarto
             Console.Clear();
             Console.WriteLine("INGATLAN KIADÁSA\n");
 
-            // Csak a szabad ingatlanokat listázzuk ki a választáshoz
             var szabadIngatlanok = ingatlanok.Where(i => !i.IsKiadva).ToList();
 
             if (szabadIngatlanok.Count == 0)
@@ -344,9 +345,9 @@ namespace IngatlanNyilvantarto
                     Console.Write("Szerződés lejárata (éééé-hh-nn): ");
                     kivalasztott.SzerzodesVege = DateTime.Parse(Console.ReadLine());
 
-                    kivalasztott.IsKiadva = true; // Átállítjuk a státuszt
+                    kivalasztott.IsKiadva = true; 
 
-                    AdatokMentese(); // Azonnal mentjük a fájlba a változást
+                    AdatokMentese(); 
 
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("\nAz ingatlan sikeresen kiadva!");
@@ -362,6 +363,44 @@ namespace IngatlanNyilvantarto
             else
             {
                 Console.WriteLine("Érvénytelen sorszám.");
+            }
+        }
+
+        static void UjFajlLetrehozasa()
+        {
+            Console.Clear();
+            Console.WriteLine("ÚJ ADATFÁJL LÉTREHOZÁSA\n");
+            Console.Write("Add meg az új fájl nevét (pl. ingatlanok_2024): ");
+            string nev = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(nev))
+            {
+                Console.WriteLine("A név nem lehet üres!");
+                return;
+            }
+
+            if (!nev.EndsWith(".txt")) nev += ".txt";
+
+            if (File.Exists(nev))
+            {
+                Console.WriteLine("Ez a fájl már létezik! Használd a betöltés funkciót.");
+                return;
+            }
+
+            try
+            {
+                File.WriteAllText(nev, "");
+
+                AktualitasFajlUtvonal = nev;
+                ingatlanok.Clear(); 
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\nSikeresen létrehozva és betöltve: {nev}");
+                Console.ResetColor();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Hiba a fájl létrehozásakor: " + ex.Message);
             }
         }
     }
