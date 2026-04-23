@@ -274,7 +274,7 @@ namespace IngatlanNyilvantarto
                         Console.WriteLine($"Hiba a sor feldolgozásakor: {sor} -> {ex.Message}");
                     }
                 }
-                Console.WriteLine($"\nSikeresen betöltve: {ingatlanok.Count} ingatlan.");
+                Console.WriteLine($"\nSikeresen betöltve: {Path.GetFileName(AktualitasFajlUtvonal)} ingatlan.");
             }
             catch (Exception ex)
             {
@@ -413,11 +413,11 @@ namespace IngatlanNyilvantarto
 
             while (true)
             {
-                keyInfo = Console.ReadKey(true); // true: nem írja ki a karaktert automatikusan
+                keyInfo = Console.ReadKey(true); 
 
                 if (keyInfo.Key == ConsoleKey.Escape)
                 {
-                    throw new OperationCanceledException(); // Jelzés, hogy az Esc-et nyomtak
+                    throw new OperationCanceledException();
                 }
 
                 if (keyInfo.Key == ConsoleKey.Enter)
@@ -429,7 +429,7 @@ namespace IngatlanNyilvantarto
                 if (keyInfo.Key == ConsoleKey.Backspace && sb.Length > 0)
                 {
                     sb.Remove(sb.Length - 1, 1);
-                    Console.Write("\b \b"); // Karakter törlése a képernyőről
+                    Console.Write("\b \b"); 
                 }
                 else if (!char.IsControl(keyInfo.KeyChar))
                 {
