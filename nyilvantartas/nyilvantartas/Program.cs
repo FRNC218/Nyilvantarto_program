@@ -28,6 +28,8 @@ namespace IngatlanNyilvantarto
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("================================================");
                 Console.WriteLine("      PROFI INGATLAN-NYILVÁNTARTÓ RENDSZER      ");
+                Console.WriteLine("          ");
+                Console.WriteLine($"      AKTIV FÁJL : { Path.GetFileName(AktualitasFajlUtvonal) }");
                 Console.WriteLine("================================================");
                 Console.ResetColor();
                 Console.WriteLine("1. Ingatlanok listázása");
@@ -36,11 +38,11 @@ namespace IngatlanNyilvantarto
                 Console.WriteLine("4. Exportalas CSV fájlba");
                 Console.WriteLine("5. Ingatlan kiadása");
                 Console.WriteLine("6. Betöltés");
-                Console.WriteLine("7. dsadasd");
+                Console.WriteLine("7. Új nyílvántartás létrehozása");
                 Console.WriteLine("0. Kilépés");
                 Console.Write("\nVálassz opciót: ");
 
-                string opcio = Console.ReadLine();
+                string opcio = ReadLineOrEsc();
 
                 switch (opcio)
                 {
@@ -131,22 +133,22 @@ namespace IngatlanNyilvantarto
             {
                 Ingatlan uj = new Ingatlan();
                 Console.Write("Cím: ");
-                uj.Cim = Console.ReadLine();
+                uj.Cim = ReadLineOrEsc();
 
                 Console.Write("Méret (m2): ");
-                uj.Meret = double.Parse(Console.ReadLine());
+                uj.Meret = double.Parse(ReadLineOrEsc());
 
                 Console.Write("Kiadva van már? (i/n): ");
-                uj.IsKiadva = Console.ReadLine().ToLower() == "i";
+                uj.IsKiadva = ReadLineOrEsc().ToLower() == "i";
 
                 if (uj.IsKiadva)
                 {
                     Console.Write("Bérlő neve: ");
-                    uj.BerloNeve = Console.ReadLine();
+                    uj.BerloNeve = ReadLineOrEsc();
                     Console.Write("Havi bérleti díj (Ft): ");
-                    uj.BerletiDij = int.Parse(Console.ReadLine());
+                    uj.BerletiDij = int.Parse(ReadLineOrEsc());
                     Console.Write("Szerződés lejárata (éééé-hh-nn): ");
-                    uj.SzerzodesVege = DateTime.Parse(Console.ReadLine());
+                    uj.SzerzodesVege = DateTime.Parse(ReadLineOrEsc());
                 }
                 else
                 {
@@ -221,7 +223,7 @@ namespace IngatlanNyilvantarto
                 Console.WriteLine($"{i + 1}. {Path.GetFileName(fajlok[i])}");
 
             Console.Write("\nSorszám: ");
-            if (int.TryParse(Console.ReadLine(), out int index) && index > 0 && index <= fajlok.Length)
+            if (int.TryParse(ReadLineOrEsc(), out int index) && index > 0 && index <= fajlok.Length)
             {
                 AktualitasFajlUtvonal = fajlok[index - 1];
                 ProbaBetoltes(AktualitasFajlUtvonal);
@@ -328,7 +330,7 @@ namespace IngatlanNyilvantarto
             }
 
             Console.Write("\nSorszám: ");
-            if (int.TryParse(Console.ReadLine(), out int index) && index > 0 && index <= szabadIngatlanok.Count)
+            if (int.TryParse(ReadLineOrEsc(), out int index) && index > 0 && index <= szabadIngatlanok.Count)
             {
                 Ingatlan kivalasztott = szabadIngatlanok[index - 1];
 
@@ -337,13 +339,13 @@ namespace IngatlanNyilvantarto
                     Console.WriteLine($"\nKiadás folyamatban: {kivalasztott.Cim}");
 
                     Console.Write("Bérlő neve: ");
-                    kivalasztott.BerloNeve = Console.ReadLine();
+                    kivalasztott.BerloNeve = ReadLineOrEsc();
 
                     Console.Write("Havi bérleti díj (Ft): ");
-                    kivalasztott.BerletiDij = int.Parse(Console.ReadLine());
+                    kivalasztott.BerletiDij = int.Parse(ReadLineOrEsc());
 
                     Console.Write("Szerződés lejárata (éééé-hh-nn): ");
-                    kivalasztott.SzerzodesVege = DateTime.Parse(Console.ReadLine());
+                    kivalasztott.SzerzodesVege = DateTime.Parse(ReadLineOrEsc());
 
                     kivalasztott.IsKiadva = true; 
 
@@ -371,7 +373,7 @@ namespace IngatlanNyilvantarto
             Console.Clear();
             Console.WriteLine("ÚJ ADATFÁJL LÉTREHOZÁSA\n");
             Console.Write("Add meg az új fájl nevét (pl. ingatlanok_2024): ");
-            string nev = Console.ReadLine();
+            string nev = ReadLineOrEsc();
 
             if (string.IsNullOrWhiteSpace(nev))
             {
@@ -401,6 +403,39 @@ namespace IngatlanNyilvantarto
             catch (Exception ex)
             {
                 Console.WriteLine("Hiba a fájl létrehozásakor: " + ex.Message);
+            }
+        }
+
+        static string ReadLineOrEsc()
+        {
+            StringBuilder sb = new StringBuilder();
+            ConsoleKeyInfo keyInfo;
+
+            while (true)
+            {
+                keyInfo = Console.ReadKey(true); // true: nem írja ki a karaktert automatikusan
+
+                if (keyInfo.Key == ConsoleKey.Escape)
+                {
+                    throw new OperationCanceledException(); // Jelzés, hogy az Esc-et nyomtak
+                }
+
+                if (keyInfo.Key == ConsoleKey.Enter)
+                {
+                    Console.WriteLine();
+                    return sb.ToString();
+                }
+
+                if (keyInfo.Key == ConsoleKey.Backspace && sb.Length > 0)
+                {
+                    sb.Remove(sb.Length - 1, 1);
+                    Console.Write("\b \b"); // Karakter törlése a képernyőről
+                }
+                else if (!char.IsControl(keyInfo.KeyChar))
+                {
+                    sb.Append(keyInfo.KeyChar);
+                    Console.Write(keyInfo.KeyChar);
+                }
             }
         }
     }
