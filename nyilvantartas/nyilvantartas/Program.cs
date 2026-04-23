@@ -16,7 +16,7 @@ namespace IngatlanNyilvantarto
     class Program
     {
         static List<Ingatlan> ingatlanok = new List<Ingatlan>();
-        const string FajlNev = "ingatlanok.txt"; // A fájl a .exe mellett lesz
+        static string AktualitasFajlUtvonal = "ingatlanok.txt";
 
         static void Main(string[] args)
         {
@@ -36,7 +36,8 @@ namespace IngatlanNyilvantarto
                 Console.WriteLine("3. Pénzügyi statisztika");
                 Console.WriteLine("4. Exportalas CSV fájlba");
                 Console.WriteLine("5. Ingatlan kiadása");
-                Console.WriteLine("6. Kilépés");
+                Console.WriteLine("6. Betöltés");
+                Console.WriteLine("0. Kilépés");
                 Console.Write("\nVálassz opciót: ");
 
                 string opcio = Console.ReadLine();
@@ -59,6 +60,9 @@ namespace IngatlanNyilvantarto
                         IngatlanKiadasa();
                         break;
                     case "6":
+                        AdatokBetoltese();
+                        break;
+                    case "0":
                         Console.WriteLine("Viszlát!");
                         return;
                     default:
@@ -190,7 +194,8 @@ namespace IngatlanNyilvantarto
             try
             {
                 var sorok = ingatlanok.Select(i => i.ToFileFormat());
-                File.WriteAllLines(FajlNev, sorok);
+                // Most már a kiválasztott fájlba mentünk
+                File.WriteAllLines(AktualitasFajlUtvonal, sorok);
             }
             catch (Exception ex)
             {
@@ -200,30 +205,76 @@ namespace IngatlanNyilvantarto
 
         static void AdatokBetoltese()
         {
-            if (File.Exists(FajlNev))
+            Console.Clear();
+            string[] fajlok = Directory.GetFiles(Directory.GetCurrentDirectory(), "*.txt");
+
+            if (fajlok.Length == 0)
             {
-                try
+                Console.WriteLine("Nincs elérhető .txt fájl.");
+                return;
+            }
+
+            Console.WriteLine("Válassz fájlt a betöltéshez:");
+            for (int i = 0; i < fajlok.Length; i++)
+                Console.WriteLine($"{i + 1}. {Path.GetFileName(fajlok[i])}");
+
+            Console.Write("\nSorszám: ");
+            if (int.TryParse(Console.ReadLine(), out int index) && index > 0 && index <= fajlok.Length)
+            {
+                AktualitasFajlUtvonal = fajlok[index - 1];
+                ProbaBetoltes(AktualitasFajlUtvonal);
+            }
+        }
+
+        static void ProbaBetoltes(string utvonal)
+        {
+            try
+            {
+                ingatlanok.Clear();
+                string[] sorok = File.ReadAllLines(utvonal);
+
+                foreach (string sor in sorok)
                 {
-                    string[] sorok = File.ReadAllLines(FajlNev);
-                    foreach (string sor in sorok)
+                    if (string.IsNullOrWhiteSpace(sor)) continue;
+                    string[] a = sor.Split(';');
+
+                    // Minimum 6 oszlop kell (az eredeti fájlodban annyi van)
+                    if (a.Length < 6) continue;
+
+                    try
                     {
-                        if (string.IsNullOrWhiteSpace(sor)) continue;
-                        string[] adatok = sor.Split(';');
-                        ingatlanok.Add(new Ingatlan
+                        Ingatlan uj = new Ingatlan
                         {
-                            Cim = adatok[0],
-                            Meret = double.Parse(adatok[1]),
-                            IsKiadva = bool.Parse(adatok[2]),
-                            BerloNeve = adatok[3],
-                            BerletiDij = int.Parse(adatok[4]),
-                            SzerzodesVege = DateTime.Parse(adatok[5])
-                        });
+                            Cim = a[0],
+                            Meret = double.Parse(a[1]),
+                            IsKiadva = bool.Parse(a[2]),
+                            BerloNeve = a[3],
+                            BerletiDij = int.Parse(a[4]),
+                            SzerzodesVege = DateTime.Parse(a[5])
+                        };
+
+                        // Ha van 7. oszlop (Gázvizsga), betöltjük, ha nincs, adunk egy mait
+                        if (a.Length >= 7)
+                        {
+                            uj.GazVizsgaDatum = DateTime.Parse(a[6]);
+                        }
+                        else
+                        {
+                            uj.GazVizsgaDatum = DateTime.Now.AddYears(1);
+                        }
+
+                        ingatlanok.Add(uj);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Hiba a sor feldolgozásakor: {sor} -> {ex.Message}");
                     }
                 }
-                catch (Exception)
-                {
-                    Console.WriteLine("A korábbi adatfájl sérült, új listát kezdünk.");
-                }
+                Console.WriteLine($"\nSikeresen betöltve: {ingatlanok.Count} ingatlan.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Hiba a fájl megnyitásakor: " + ex.Message);
             }
         }
         static void ExportalasCSV()
@@ -254,6 +305,7 @@ namespace IngatlanNyilvantarto
                 Console.WriteLine("Hiba az exportálás során: " + ex.Message);
             }
         }
+
         static void IngatlanKiadasa()
         {
             Console.Clear();

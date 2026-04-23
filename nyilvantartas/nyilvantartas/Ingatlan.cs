@@ -18,7 +18,7 @@ namespace IngatlanNyilvantarto
 
         public string ToFileFormat()
         {
-            return $"{Cim};{Meret};{IsKiadva};{BerloNeve};{BerletiDij};{SzerzodesVege}";
+            return $"{Cim};{Meret};{IsKiadva};{BerloNeve};{BerletiDij};{SzerzodesVege:yyyy-MM-dd};{GazVizsgaDatum:yyyy-MM-dd}";
         }
 
         public override string ToString()
