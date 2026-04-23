@@ -314,5 +314,3 @@ namespace IngatlanNyilvantarto
         }
     }
 }
-
-//
